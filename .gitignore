@@ -1,0 +1,18 @@
+# build outputs (simulation, Vivado runs, regression vectors)
+build/
+.Xil/
+xsim.dir/
+*.jou
+*.log
+*.pb
+*.wdb
+
+# downloaded and converted wafer-map data (see scripts/get_data.py to fetch it)
+data/
+
+# Python
+__pycache__/
+*.pyc
+
+# Vivado writes this in the working directory
+clockInfo.txt
