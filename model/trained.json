@@ -1,0 +1,77 @@
+{
+ "chk": 16,
+ "persist": 3,
+ "min_frac": 205,
+ "margin": [
+  0,
+  638,
+  876,
+  916,
+  313,
+  784,
+  1344,
+  892,
+  65535
+ ],
+ "target_precision": 0.9,
+ "site_min": 32,
+ "site_delta": 1128,
+ "n_sites_multisite": 4,
+ "calibration": {
+  "Center": {
+   "margin": 638,
+   "calls": 413,
+   "precision": 0.9007263922518159,
+   "coverage": 0.6838235294117647
+  },
+  "Donut": {
+   "margin": 876,
+   "calls": 50,
+   "precision": 0.92,
+   "coverage": 0.6571428571428571
+  },
+  "Edge-Loc": {
+   "margin": 916,
+   "calls": 197,
+   "precision": 0.9086294416243654,
+   "coverage": 0.26917293233082706
+  },
+  "Edge-Ring": {
+   "margin": 313,
+   "calls": 1691,
+   "precision": 0.9000591366055588,
+   "coverage": 0.9506558400999375
+  },
+  "Loc": {
+   "margin": 784,
+   "calls": 105,
+   "precision": 0.9047619047619048,
+   "coverage": 0.19916142557651992
+  },
+  "Near-full": {
+   "margin": 1344,
+   "calls": 23,
+   "precision": 0.9130434782608695,
+   "coverage": 0.75
+  },
+  "Random": {
+   "margin": 892,
+   "calls": 95,
+   "precision": 0.9052631578947369,
+   "coverage": 0.7049180327868853
+  },
+  "Scratch": {
+   "margin": 65535,
+   "calls": 0,
+   "precision": null,
+   "coverage": 0.0
+  }
+ },
+ "site_false_alarm_cal": 0.0009395808652314228,
+ "quant_agreement": 0.9989858431989403,
+ "wafers": {
+  "fit": 96632,
+  "cal": 24479,
+  "test": 51839
+ }
+}
