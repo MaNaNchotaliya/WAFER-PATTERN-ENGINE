@@ -1,0 +1,15 @@
+xsim run with gap 0%: 716.4 s
+xsim run with gap 35%: 676.5 s
+test                         dies records      final       call   @die  site    gap0%   gap35%     clocks
+wm_center_27361               515      33     Center     Center    272     -     PASS     PASS     183774
+wm_edgering_22788            2126     133  Edge-Ring  Edge-Ring    288     -     PASS     PASS     745780
+wm_random_14886              2749     172     Random     Random    688     -     PASS     PASS     965263
+wm_site_fault_64701           793      50       none          -      -     2     PASS     PASS     279936
+single_die                      1       1       none          -      -     -     PASS     PASS       4853
+rejects                         5       2     Random          -      -     -     PASS     PASS       9808
+random_00                      65       4      Donut          -      -     -     PASS     PASS      20767
+random_03                      11       1       none          -      -     -     PASS     PASS       5021
+random_05                     523       1        Loc        Loc    520     -     PASS     PASS      12620
+random_06                     178      11  Near-full  Near-full    112     -     PASS     PASS      57958
+random_08                     536       1   Edge-Loc          -      -     -     PASS     PASS      13263
+11 tests, 409 checkpoint records x 2 gap settings: ALL TESTS PASS (routed netlist == model, every field of every record)

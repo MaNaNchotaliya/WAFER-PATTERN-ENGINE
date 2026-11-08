@@ -1,0 +1,29 @@
+xsim run with gap 0%: 91.3 s
+xsim run with gap 35%: 96.7 s
+test                         dies records      final       call   @die  site    gap0%   gap35%     clocks
+wm_none_163321                561      36   Edge-Loc          -      -     -     PASS     PASS     200889
+wm_center_27361               515      33     Center     Center    272     -     PASS     PASS     183774
+wm_donut_45692               1748     110      Donut          -      -     -     PASS     PASS     616114
+wm_edgeloc_151521            1187      75       none          -      -     -     PASS     PASS     419901
+wm_edgering_22788            2126     133  Edge-Ring  Edge-Ring    288     -     PASS     PASS     745780
+wm_loc_121428                1109      70   Edge-Loc          -      -     -     PASS     PASS     391608
+wm_nearfull_126460           1109      70  Near-full          -      -     -     PASS     PASS     390168
+wm_random_14886              2749     172     Random     Random    688     -     PASS     PASS     965263
+wm_scratch_9806               980      62   Edge-Loc          -      -     -     PASS     PASS     347122
+wm_site_fault_64701           793      50       none          -      -     2     PASS     PASS     279936
+wm_4site_ok_64701             793      50       none          -      -     -     PASS     PASS     284755
+wm_largest_15063            22372     350  Edge-Ring  Edge-Ring   3264     -     PASS     PASS    2206441
+full_256_all_fail           65536     258  Near-full  Near-full  19635     -     PASS     PASS    2202192
+single_die                      1       1       none          -      -     -     PASS     PASS       4853
+rejects                         5       2     Random          -      -     -     PASS     PASS       9808
+random_00                      65       4      Donut          -      -     -     PASS     PASS      20767
+random_01                   41345    2584        Loc     Random     32     0     PASS     PASS   15126650
+random_02                   33044    2065    Scratch          -      -     -     PASS     PASS   11731677
+random_03                      11       1       none          -      -     -     PASS     PASS       5021
+random_04                    1762     110    Scratch          -      -     -     PASS     PASS     631764
+random_05                     523       1        Loc        Loc    520     -     PASS     PASS      12620
+random_06                     178      11  Near-full  Near-full    112     -     PASS     PASS      57958
+random_07                     310     307     Random     Center     82     -     PASS     PASS    1639744
+random_08                     536       1   Edge-Loc          -      -     -     PASS     PASS      13263
+random_09                     933     186        Loc      Donut    125     -     PASS     PASS    1007711
+25 tests, 6742 checkpoint records x 2 gap settings: ALL TESTS PASS (RTL == model, every field of every record)
