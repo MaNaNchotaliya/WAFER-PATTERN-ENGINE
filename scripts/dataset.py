@@ -1,4 +1,4 @@
-"""WM-811K access, the lot-disjoint split, and parallel feature extraction."""
+"""WM-811K loading, the split by lot, and feature extraction in parallel."""
 import sys
 from multiprocessing import Pool
 from pathlib import Path
@@ -25,10 +25,10 @@ def load():
 
 
 def split(D):
-    """Lot-disjoint split: 30% of lots for test; 20% of the remaining lots for calibration.
-
-    Wafers of one lot are similar (72% of defect wafers share their label with another
-    wafer of the same lot), so a wafer-level random split would leak."""
+    """split by lot: 30% of the lots for test, 20% of the remaining lots for calibration.
+    Wafers from one lot look alike (72% of defect wafers share their label with another wafer
+    of the same lot), so a random split by wafer would leak.
+    """
     lot = D["lot"]
     lots = np.unique(lot)
     test_lots = set(np.random.default_rng(TEST_SEED).choice(lots, int(TEST_SHARE * len(lots)), replace=False))
@@ -65,7 +65,7 @@ def _frac_job(args):
 
 
 def frac_features(indices, fracs=TRAIN_FRACS, order="serpentine", procs=15):
-    """(n, len(fracs), NF) features after ceil(frac * N) dies."""
+    """features after ceil(frac*N) dies, shape (n, len(fracs), NF)"""
     with Pool(procs, initializer=_init) as p:
         return np.stack(p.map(_frac_job, [(int(i), fracs, order) for i in indices], chunksize=64))
 
@@ -80,7 +80,7 @@ def _ck_job(args):
 
 
 def checkpoint_features(indices, chk=16, order="serpentine", procs=15):
-    """Per wafer: (features at every checkpoint, dies tested at each checkpoint, N)."""
+    """per wafer: features at every checkpoint, dies at each checkpoint, N"""
     with Pool(procs, initializer=_init) as p:
         return p.map(_ck_job, [(int(i), chk, order) for i in indices], chunksize=32)
 
@@ -111,7 +111,7 @@ def _run_job(args):
 
 
 def run_wafers(indices, trees_path, params, order="serpentine", faults=None, procs=15):
-    """Full engine (fast model) per wafer; returns the final record of each wafer."""
+    """run the whole engine (fast model) on each wafer, returns the last record of each"""
     faults = faults or [None] * len(indices)
     with Pool(procs, initializer=_init_run, initargs=(str(trees_path),)) as p:
         return p.map(_run_job, [(int(i), params, order, f) for i, f in zip(indices, faults)], chunksize=32)

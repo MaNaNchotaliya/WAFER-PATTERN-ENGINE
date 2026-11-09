@@ -1,8 +1,7 @@
-"""Vectorized model: the same integer features and decisions as wpe_model.py, computed
-with cumulative sums over the whole die stream instead of one die at a time.
+"""Same model as wpe_model.py, vectorized with cumulative sums (much faster).
 
-Used for training and for the large evaluations. It is written independently of the
-per-die model, and model/selftest_models.py checks that both give identical records.
+Used for training and evaluation. Written separately on purpose, selftest_models.py checks
+that both give the same records.
 """
 import numpy as np
 
@@ -24,7 +23,7 @@ def RATE(a, b):
 
 
 def stream_series(cfg, dies):
-    """Cumulative counters indexed by the number of accepted dies, plus checkpoint list."""
+    """counters indexed by the number of accepted dies, plus the checkpoint list"""
     d = np.asarray(dies, np.int64).reshape(-1, 4)
     x, y, fl, site = d[:, 0], d[:, 1], d[:, 2], d[:, 3]
     E = len(d)
@@ -89,7 +88,7 @@ def stream_series(cfg, dies):
 
 
 def features_at(S, cfg, Tl):
-    """Feature matrix (len(Tl), NF) after Tl accepted dies."""
+    """features after Tl accepted dies, shape (len(Tl), NF)"""
     Tl = np.asarray(Tl, np.int64)
     n = len(Tl)
     Tz = S["Tz"][Tl].reshape(n, NR, NS)
@@ -119,7 +118,7 @@ def features_at(S, cfg, Tl):
 
 
 def site_check(S, cfg, T):
-    """First flagged site at T accepted dies (or None), same rule as the engine."""
+    """first flagged site after T dies, or None"""
     if cfg.n_sites <= 0:
         return None
     Ts, Fs = S["Ts"][T], S["Fs"][T]
@@ -133,7 +132,7 @@ def site_check(S, cfg, T):
 
 
 def decide(cfg, S, feats, scores):
-    """Run the early-call rule and the site check over the checkpoint list."""
+    """early call rule and site check over all the checkpoints"""
     dec = Decider(cfg)
     site_flag = site_id = site_ndies = 0
     out = []
@@ -153,7 +152,7 @@ def decide(cfg, S, feats, scores):
 
 
 def run_fast(cfg, dies, trees):
-    """Same records as wpe_model.Engine.run."""
+    """same records as wpe_model.Engine.run"""
     S = stream_series(cfg, dies)
     feats = features_at(S, cfg, S["ck_T"])
     scores = trees.scores_vec(feats)

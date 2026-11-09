@@ -1,9 +1,4 @@
-"""Figures for the README (needs results/eval_results.json from scripts/evaluate.py).
-
-  docs/figures/example_calls.png      wafers at the moment the engine named the pattern
-  docs/figures/accuracy_vs_tested.png class accuracy vs share of the wafer tested
-  docs/figures/earliness.png          per class: share named early, and how early
-"""
+"""Figures in docs/figures, from results/eval_results.json (run scripts/evaluate.py first)."""
 import json
 import sys
 

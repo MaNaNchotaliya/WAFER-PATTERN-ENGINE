@@ -1,14 +1,10 @@
-"""Download the WM-811K wafer-map dataset and convert the labeled maps to a compact .npz.
+"""Downloads WM-811K and converts the labeled maps to data/wm811k_labeled.npz (~25 MB).
 
-WM-811K (LSWMD.pkl) is a pandas DataFrame pickled with Python 2. Unpickling runs code
-named inside the file, so this script never calls pickle.load on it directly: a
-restricted unpickler builds only numpy arrays and inert placeholder objects, and stops
-on any other global. No pandas install is needed.
+LSWMD.pkl is a pandas DataFrame pickled with python 2. pickle.load runs whatever the file
+asks for, so this uses a restricted unpickler that only builds numpy arrays and dummy
+objects and stops on anything else. Doesn't need pandas.
 
-Usage:
-  python scripts/get_data.py                 # download (157 MB) if needed, then convert
-  python scripts/get_data.py --cache D:/wm   # keep the downloaded zip somewhere else
-Output: data/wm811k_labeled.npz (labeled maps only, about 25 MB)
+usage: python scripts/get_data.py [--cache DIR]   (DIR = where the 157 MB zip goes)
 """
 import argparse
 import hashlib
@@ -32,9 +28,9 @@ CLASSES = ["none", "Center", "Donut", "Edge-Loc", "Edge-Ring", "Loc", "Near-full
 SPLITS = ["Training", "Test"]
 
 
-# ---------------------------------------------------------------- safe unpickling
+# safe unpickling
 class _Inert:
-    """Placeholder for a pandas object: keeps constructor arguments and state, runs nothing."""
+    """dummy for the pandas classes, only keeps the args and the state"""
     _qual = "?"
 
     def __init__(self, *args, **kw):
@@ -82,7 +78,7 @@ class SafeUnpickler(pickle.Unpickler):
 
 
 def load_columns(zip_path):
-    """Return {column name: 1-D object/float array} from the pickled DataFrame."""
+    """column name -> array, from the pickled DataFrame"""
     with zipfile.ZipFile(zip_path) as z, z.open("LSWMD.pkl") as f:
         frame = SafeUnpickler(f, encoding="latin1").load()
     mgr = frame.state["_data"]
@@ -98,7 +94,7 @@ def load_columns(zip_path):
     return cols
 
 
-# ---------------------------------------------------------------- download
+# download
 def sha256(path):
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -121,7 +117,7 @@ def download(zip_path):
 
 
 def label_of(x):
-    """failureType / trianTestLabel cells hold [['name']] when labeled, [] otherwise."""
+    """labels are stored as [['name']], or [] when the wafer is unlabeled"""
     a = np.asarray(x)
     return str(a.ravel()[0]) if a.size else ""
 

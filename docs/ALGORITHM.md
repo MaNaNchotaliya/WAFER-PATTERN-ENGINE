@@ -1,8 +1,8 @@
-# Algorithm specification
+# How the engine works (exact rules)
 
-This is the exact behaviour of the engine. `model/wpe_model.py` implements it one die at a
-time and is the reference for the RTL; `model/wpe_fast.py` implements it again with
-cumulative sums for training and evaluation. All arithmetic is integer.
+These are the exact rules the Verilog follows. `model/wpe_model.py` does the same thing one
+die at a time (the RTL gets checked against it), and `model/wpe_fast.py` does it again with
+cumulative sums, which is what training and evaluation use. Everything is integer math.
 
 ## 1. Inputs
 
@@ -128,9 +128,10 @@ and the first site with `d >= site_delta` is latched (site, number of dies teste
 
 `ndies` (= T), `n_dup`, `n_oor`, `final`, the 39 features, the 9 scores, `top`, `margin`,
 `run_cls`, `run_len`, `called`, `call_cls`, `call_ndies`, `site_flag`, `site_id`,
-`site_ndies`. The testbench writes every record and the regression compares every field.
+`site_ndies`. They come out packed on `ck_flat` (bit offsets in `rtl/wpe_defs.vh`). The
+testbench writes every record to a file and the regression compares every field.
 
-## 9. Timing (RTL)
+## 9. Clock cycles
 
 | step | clocks |
 |---|---|

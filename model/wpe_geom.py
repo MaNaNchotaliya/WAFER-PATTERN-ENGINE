@@ -1,9 +1,8 @@
-"""Host-side helpers: wafer geometry registers, probe orders and probe-site faults.
+"""Tester (host) side: geometry registers, probe orders and probe site faults.
 
-The geometry registers are what a tester computes once per product from its probe map
-(the list of dies to test): the centre, an axis scale that turns the elliptical die grid
-into a circle, and the four ring thresholds. All integer, so the engine and this model
-agree exactly.
+The geometry registers are computed once per product from the probe map: the centre, an
+x/y scale so the die grid comes out round, and the 4 ring thresholds. All integer math so
+the engine and the model agree exactly.
 """
 import numpy as np
 
@@ -11,7 +10,7 @@ from wpe_params import NR, RING_B2, Config
 
 
 def zone_of(x, y, cx2, cy2, wx, wy, thr):
-    """Ring and sector of one die, exactly as the engine computes them."""
+    """ring and sector of one die, same math as wpe_zone.v"""
     u = (2 * x - cx2) * wx
     v = (2 * y - cy2) * wy
     d2 = u * u + v * v
@@ -30,7 +29,7 @@ def zone_of(x, y, cx2, cy2, wx, wy, thr):
 
 
 def geometry(valid, cfg=None):
-    """Fill the geometry registers of a Config from a boolean map of the dies to test."""
+    """fill the geometry registers from a bool map of the dies to test"""
     cfg = cfg or Config()
     ys, xs = np.nonzero(valid)
     xmin, xmax, ymin, ymax = int(xs.min()), int(xs.max()), int(ys.min()), int(ys.max())
@@ -54,7 +53,7 @@ def geometry(valid, cfg=None):
 
 
 def zone_maps(cfg):
-    """Ring and sector of every grid position (vectorized zone_of)."""
+    """ring and sector of every grid position"""
     yy, xx = np.mgrid[0:cfg.h, 0:cfg.w]
     u = (2 * xx.astype(np.int64) - cfg.cx2) * cfg.wx
     v = (2 * yy.astype(np.int64) - cfg.cy2) * cfg.wy
@@ -69,9 +68,9 @@ def zone_maps(cfg):
     return ring, 2 * q + np.where(lead, 0, 1)
 
 
-# ------------------------------------------------------------------ probe orders
+# probe orders
 def serpentine(valid):
-    """Single-site prober order: rows top to bottom, alternating direction."""
+    """single site prober: rows top to bottom, direction alternates"""
     out = []
     H, W = valid.shape
     for y in range(H):
@@ -81,9 +80,7 @@ def serpentine(valid):
 
 
 def multisite(valid, sx=2, sy=2):
-    """Multi-site order: sx*sy dies per touchdown, touchdowns in serpentine order.
-
-    Site id = j * sx + i for the die at offset (i, j) inside the touchdown."""
+    """sx*sy dies per touchdown, touchdowns in serpentine order, site = j*sx + i"""
     out = []
     H, W = valid.shape
     nbx, nby = (W + sx - 1) // sx, (H + sy - 1) // sy
@@ -99,14 +96,14 @@ def multisite(valid, sx=2, sy=2):
 
 
 def dies_from_map(m, order="serpentine"):
-    """Die stream (x, y, fail, site) of a WM-811K map (0 = no die, 1 = pass, 2 = fail)."""
+    """die stream (x, y, fail, site) from a WM-811K map (0 no die, 1 pass, 2 fail)"""
     valid = m > 0
     seq = serpentine(valid) if order == "serpentine" else multisite(valid)
     return [(x, y, int(m[y, x] == 2), s) for x, y, s in seq]
 
 
 def inject_site_fault(dies, site, p_fail, rng):
-    """A damaged probe site: each die it tests fails with probability p_fail."""
+    """bad probe site: every good die it tests fails with probability p_fail"""
     out = []
     for x, y, fl, s in dies:
         if s == site and not fl and rng.random() < p_fail:

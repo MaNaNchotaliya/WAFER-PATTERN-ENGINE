@@ -1,11 +1,10 @@
-"""Shared constants, configuration and file formats of the wafer-pattern engine.
-
-Keep every constant in sync with rtl/wpe_pkg.sv.
+"""Constants, config registers and test file formats used by the models and scripts.
+Has to match rtl/wpe_defs.vh.
 """
 from dataclasses import dataclass, field
 from typing import List
 
-# ------------------------------------------------------------------ geometry
+# geometry
 CW_XY = 8                    # die coordinate width: maps up to 256 x 256
 MAXD = 1 << CW_XY
 NR = 5                       # rings (centre ... edge)
@@ -14,7 +13,7 @@ NZ = NR * NS                 # zones
 # ring boundaries at 0.3, 0.5, 0.7, 0.9 of the wafer radius, as (b^2 * 65536)
 RING_B2 = [5898, 16384, 32113, 53084]
 
-# ------------------------------------------------------------------ fixed point
+# fixed point
 QB = 12                      # rates are Q.12: 4096 = 1.0
 ONE = 1 << QB
 TMIN = 4                     # a sector rate counts once the sector has this many dies
@@ -22,7 +21,7 @@ CNT_W = 17                   # die counters (up to 65,536 dies)
 FW = 14                      # feature width (signed)
 NSITE = 8                    # probe sites tracked (site id 0..7)
 
-# ------------------------------------------------------------------ classifier
+# classifier
 CLASSES = ["none", "Center", "Donut", "Edge-Loc", "Edge-Ring", "Loc", "Near-full", "Random", "Scratch"]
 NCLS = len(CLASSES)
 DEPTH = 3                    # every tree is a complete binary tree of this depth
@@ -45,7 +44,7 @@ FEATURES = (["frac", "f"]
 NF = len(FEATURES)           # 39
 FI = {n: i for i, n in enumerate(FEATURES)}
 
-# ------------------------------------------------------------------ config registers
+# config registers
 # address map of the configuration bus (cfg_addr), shared with the testbench
 REG = {"w": 0, "h": 1, "cx2": 2, "cy2": 3, "wx": 4, "wy": 5,
        "thr0": 6, "thr1": 7, "thr2": 8, "thr3": 9, "n_total": 10,
@@ -76,7 +75,7 @@ class Config:
     site_delta: int = 1024
 
     def registers(self):
-        """(address, value) pairs in bus order."""
+        """(address, value) pairs in address order"""
         v = {"w": self.w, "h": self.h, "cx2": self.cx2, "cy2": self.cy2, "wx": self.wx, "wy": self.wy,
              "n_total": self.n_total, "chk": self.chk, "persist": self.persist, "min_frac": self.min_frac,
              "n_sites": self.n_sites, "site_min": self.site_min, "site_delta": self.site_delta}
@@ -89,16 +88,14 @@ class Config:
         return sorted((REG[n], val) for n, val in v.items())
 
 
-# ------------------------------------------------------------------ test vector files
+# test vector files
 def write_cfg(path, cfg: Config):
-    """One 'address value' line per register (decimal)."""
     with open(path, "w", newline="\n") as f:
         for a, v in cfg.registers():
             f.write(f"{a} {v}\n")
 
 
 def write_stim(path, dies):
-    """One die per line: x y fail site last (decimal)."""
     with open(path, "w", newline="\n") as f:
         n = len(dies)
         for i, (x, y, fl, s) in enumerate(dies):

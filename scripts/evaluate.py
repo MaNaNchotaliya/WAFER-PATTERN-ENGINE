@@ -1,14 +1,13 @@
-"""Evaluate the engine on the held-out test lots (bit-exact fast model of the engine).
+"""Evaluation on the test lots, using the fast model (same results as the RTL).
 
-  E1  class accuracy vs share of the wafer tested (serpentine prober order)
-  E2  full-map confusion matrix
-  E3  early calls: precision, coverage, how early (serpentine order)
-  E4  the same with a 4-site (2 x 2) prober order the classifier was not trained on
-  E5  probe-site faults: detection and false alarms (4-site order)
-  E6  reference: the same recipe on WM-811K's official train/test split (full maps)
+  E1  accuracy vs how much of the wafer is tested
+  E2  confusion matrix on full maps
+  E3  early calls, serpentine order
+  E4  early calls, 4-site order (not used in training)
+  E5  probe site faults
+  E6  same recipe on the official WM-811K split, for reference
 
-Usage: python scripts/evaluate.py
-Writes results/eval_results.json and results/eval_tables.md
+usage: python scripts/evaluate.py   -> results/eval_results.json, results/eval_tables.md
 """
 import json
 import sys
@@ -38,14 +37,14 @@ def confusion_matrix(y, p, labels=None):
 
 
 def balanced_accuracy_score(y, p):
-    """Mean per-class recall (the classes present in y)."""
+    """mean recall over the classes that show up in y"""
     cm = confusion_matrix(y, p)
     n = cm.sum(1)
     return float(np.mean(np.diag(cm)[n > 0] / n[n > 0]))
 
 
 def early_table(recs, y):
-    """Per class: wafers, calls made for it, correct calls, precision, coverage, median share tested."""
+    """per class: wafers, calls, correct calls, precision, coverage and how early"""
     rows = {}
     called = np.array([r["called"] for r in recs], bool)
     ccls = np.array([r["call_cls"] for r in recs])
@@ -88,7 +87,7 @@ def main():
     R = {"test_wafers": int(len(te_idx)), "test_lots": int(len(np.unique(D["lot"][te_idx])))}
     md = []
 
-    # ---------------- E1 / E2: accuracy vs share tested, full-map confusion
+    # E1 / E2: accuracy vs share tested, full-map confusion
     t = time.time()
     Xf = dataset.frac_features(te_idx, fracs=FRACS)
     top = np.stack([np.argmax(trees.scores_vec(Xf[:, j]), 1) for j in range(len(FRACS))], 1)
@@ -119,7 +118,7 @@ def main():
         md.append(f"| {CLASSES[k]} | " + " | ".join(str(v) for v in cm[k]) + f" | {R['E2']['recall'][k]:.3f} |")
     md.append("| precision | " + " | ".join(f"{p:.3f}" for p in R["E2"]["precision"]) + " | |\n")
 
-    # ---------------- E3 / E4: early calls, serpentine and 4-site order
+    # E3 / E4: early calls, serpentine and 4-site order
     for key, order in (("E3", "serpentine"), ("E4", "multisite")):
         t = time.time()
         recs = dataset.run_wafers(te_idx, TREES, prm, order=order)
@@ -144,7 +143,7 @@ def main():
                   f"{tot['median_tested_correct'] * 100:.0f}% (mean dies saved "
                   f"{tot['dies_saved_correct'] * 100:.0f}%).\n")
 
-    # ---------------- E5: probe-site faults (4-site order)
+    # E5: probe-site faults (4-site order)
     rng = np.random.default_rng(55)
     sub = np.sort(rng.choice(te_idx, 6000, replace=False))
     prm4 = dict(prm, n_sites=4)
@@ -180,7 +179,7 @@ def main():
                       f"{fmt(r['median_tested'] * 100 if r['median_tested'] is not None else None, 1)}% |")
     md.append("")
 
-    # ---------------- E6: official split (full maps, same recipe, floating point)
+    # E6: official split (full maps, same recipe, floating point)
     from sklearn.ensemble import HistGradientBoostingClassifier   # here: worker processes skip it
     t = time.time()
     otr, ote = np.nonzero(sp["official_train"])[0], np.nonzero(sp["official_test"])[0]

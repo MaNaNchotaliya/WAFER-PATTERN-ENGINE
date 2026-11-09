@@ -1,10 +1,8 @@
-"""Bit-exact model of the engine, one die at a time (the reference for the RTL).
+"""Reference model of the engine, one die at a time. The RTL has to match it exactly.
 
-Per die: reject it if it lies outside the W x H map or was already tested; otherwise
-count its pairs with already-tested neighbours (8-neighbourhood, four directions), add it
-to its zone, ring, site and wafer counters, and mark it in the map. A checkpoint runs
-after every `chk` accepted dies and after the die flagged `last`: features, tree
-ensemble, early-call rule, probe-site check. Every checkpoint produces one record.
+Per die: drop it if it is outside the map or a retest, count pairs with neighbours that
+were already tested (8 neighbours, 4 directions), add it to the zone / ring / site / wafer
+counters. A checkpoint runs every chk accepted dies and at the last die, one record each.
 """
 from wpe_geom import zone_of
 from wpe_gbt import Decider
@@ -17,7 +15,7 @@ NEIGH = [(-1, 0, 0), (1, 0, 0), (0, -1, 1), (0, 1, 1), (-1, -1, 2), (1, 1, 2), (
 
 
 def rate(a, b):
-    """Q.12 ratio a/b: 0 when b = 0, 1.0 when a >= b, else floor(a * 4096 / b)."""
+    """Q.12 a/b: 0 if b = 0, 4096 if a >= b, else floor(a*4096/b)"""
     if b == 0:
         return 0
     if a >= b:
@@ -26,7 +24,7 @@ def rate(a, b):
 
 
 def compute_features(c, n_total, n_ring):
-    """Feature vector from the counter state c (a dict), in FEATURES order."""
+    """feature vector from the counters, in FEATURES order"""
     T, F = c["T"], c["F"]
     f = rate(F, T)
     fr = [rate(c["Fr"][r], c["Tr"][r]) for r in range(NR)]
@@ -59,7 +57,7 @@ class Engine:
         self.trees = trees
 
     def run(self, cfg, dies):
-        """dies: list of (x, y, fail, site); the last one carries the 'last' flag."""
+        """dies = list of (x, y, fail, site), the last one gets the last flag"""
         if not (1 <= cfg.w <= MAXD and 1 <= cfg.h <= MAXD):
             raise ValueError("map width and height must be 1..256")
         tested = bytearray(MAXD * MAXD)
@@ -105,7 +103,7 @@ class Engine:
                         periodic = True
             if not (periodic or last):
                 continue
-            # ---------------- checkpoint
+            # checkpoint
             feats = compute_features(c, cfg.n_total, cfg.n_ring)
             scores = self.trees.scores(feats)
             top, margin = dec.step(feats, scores, c["T"])

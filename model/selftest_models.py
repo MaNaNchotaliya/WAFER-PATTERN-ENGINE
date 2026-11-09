@@ -1,11 +1,10 @@
-"""Cross-check the per-die model (wpe_model) against the vectorized model (wpe_fast).
+"""Checks wpe_model (per die) against wpe_fast (vectorized) on random cases.
 
-Random wafers (sizes up to 256 x 256, random die masks and fail patterns), random probe
-orders (serpentine, multi-site, random), injected duplicate and out-of-range dies, random
-configuration registers and random or trained trees. Every field of every checkpoint
-record must match.
+Random wafers up to 256x256, random fail patterns and probe orders, retests and dies
+outside the map, random config registers, random or trained trees. Every field of every
+record has to match.
 
-Usage: python model/selftest_models.py [cases] [--trained]
+usage: python model/selftest_models.py [cases] [--trained]
 """
 import sys
 from pathlib import Path

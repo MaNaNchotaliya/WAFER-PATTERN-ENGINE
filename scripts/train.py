@@ -1,8 +1,8 @@
-"""Train the tree ensemble, quantize it into the ROM images, and calibrate the
-early-call margins and the probe-site check on held-out calibration lots.
+"""Trains the tree ensemble, writes the ROM files, then calibrates the early call margins
+and the site check on the calibration lots.
 
-Usage: python scripts/train.py
-Writes: model/trees.npz, rtl/wpe_nodes.mem, rtl/wpe_leaves.mem, model/trained.json
+usage: python scripts/train.py
+writes model/trees.npz, rtl/wpe_nodes.mem, rtl/wpe_leaves.mem, model/trained.json
 """
 import json
 import sys
@@ -39,7 +39,7 @@ def fit_hgb(X, y):
 
 
 def top_margin(S):
-    """Vectorized top2: best class (lowest index on ties) and margin to the runner-up."""
+    """vectorized top2"""
     top = np.argmax(S, axis=1)
     best = S[np.arange(len(S)), top]
     rest = S.copy()
@@ -48,7 +48,7 @@ def top_margin(S):
 
 
 def best_threshold(top, margin, frac, k):
-    """Largest margin threshold at which class k would be called on this wafer (-1 if never)."""
+    """largest margin threshold that would still give a class k call on this wafer (-1 = never)"""
     ok = (top == k) & (frac >= MIN_FRAC)
     m = np.where(ok, margin, -1)
     if len(m) < PERSIST:
@@ -57,8 +57,10 @@ def best_threshold(top, margin, frac, k):
 
 
 def calibrate_margins(cal_seq, y):
-    """Per class: lowest margin with precision >= TARGET_PREC at it and at every higher
-    margin that has at least MIN_CALLS calls. Classes that never get there stay off."""
+    """per class the lowest margin where precision >= TARGET_PREC, and it has to stay there
+    for every higher margin that has at least MIN_CALLS calls. Classes that never get
+    there are switched off (65535).
+    """
     margins, report = [0] * NCLS, {}
     for k in range(1, NCLS):
         mx = np.array([best_threshold(t, m, f, k) for t, m, f in cal_seq])

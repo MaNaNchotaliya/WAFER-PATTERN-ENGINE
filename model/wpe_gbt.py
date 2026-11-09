@@ -1,9 +1,8 @@
-"""Integer gradient-boosted tree ensemble (the engine's classifier) and the early-call rule.
+"""Integer tree ensemble (what the ROMs hold) and the early call rule.
 
-Tree format (same in the ROM): NTREE = NITER * NCLS complete binary trees of depth 3,
-tree t adds to class t % NCLS. Internal node n (heap order, root 0) holds a feature index
-and a threshold; the walk goes right when feature > threshold, so after 3 levels
-node - 7 is the leaf index. Leaves and per-class start values are Q.8 integers.
+576 trees of depth 3, tree t adds to class t % 9. Node n (heap order, root 0) has a
+feature index and a threshold, go right if feature > threshold, after 3 levels node - 7
+is the leaf. Leaf and start values are Q.8 integers.
 """
 import numpy as np
 
@@ -26,7 +25,7 @@ class Trees:
         if self.feat.min() < 0 or self.feat.max() >= NF:
             raise ValueError("bad feature index")
 
-    # -------------------------------------------------------------- files
+    # files
     def save(self, path):
         np.savez(path, feat=self.feat, thr=self.thr, leaf=self.leaf, base=self.base)
 
@@ -36,7 +35,9 @@ class Trees:
         return cls(d["feat"], d["thr"], d["leaf"], d["base"])
 
     def write_mem(self, node_path, leaf_path):
-        """$readmemh images: node word {feat[5:0], thr[13:0]}; leaf word 16-bit, then NCLS bases."""
+        """hex files for $readmemh. node word = {feat[5:0], thr[13:0]}, leaf word = 16 bit,
+        the 9 start values go at the end of the leaf file
+        """
         with open(node_path, "w", newline="\n") as f:
             for t in range(NTREE):
                 for n in range(NNODE):
@@ -48,9 +49,9 @@ class Trees:
             for k in range(NCLS):
                 f.write(f"{int(self.base[k]) & 0xFFFF:04x}\n")
 
-    # -------------------------------------------------------------- evaluation
+    # evaluation
     def scores(self, x):
-        """Scalar walk (mirrors the hardware): x = list of NF ints -> list of NCLS ints."""
+        """walk every tree like the hardware does, x = list of NF ints"""
         s = [int(b) for b in self.base]
         for t in range(NTREE):
             n = 0
@@ -61,7 +62,7 @@ class Trees:
         return s
 
     def scores_vec(self, X, chunk=20000):
-        """Vectorized over samples and trees: X (n, NF) -> (n, NCLS)."""
+        """same as scores() but vectorized, X is (n, NF)"""
         X = np.asarray(X, np.int64)
         out = np.empty((X.shape[0], NCLS), np.int64)
         tid = np.arange(NTREE)
@@ -80,7 +81,7 @@ class Trees:
 
 
 def from_sklearn(clf):
-    """Quantize a fitted HistGradientBoostingClassifier (max_depth <= 3, NCLS classes)."""
+    """convert a fitted HistGradientBoostingClassifier (max_depth 3, 9 classes) to integer trees"""
     preds = clf._predictors
     if len(preds) != NITER or len(preds[0]) != NCLS:
         raise ValueError(f"need {NITER} iterations x {NCLS} classes")
@@ -119,9 +120,9 @@ def from_sklearn(clf):
     return Trees(feat, thr, leaf, base)
 
 
-# ------------------------------------------------------------------ decisions
+# decisions
 def top2(s):
-    """Best class (lowest index wins ties) and its margin over the runner-up."""
+    """best class (lowest index wins ties) and its margin over the second best"""
     best, bi, second = s[0], 0, SCORE_MIN
     for k in range(1, NCLS):
         if s[k] > best:
@@ -132,9 +133,10 @@ def top2(s):
 
 
 class Decider:
-    """Early-call rule: a pattern (class != none) is called once the same class has led
-    with margin >= margin[class] for `persist` checkpoints in a row and at least
-    min_frac of the wafer has been tested. The first call is latched."""
+    """early call: the same class (not none) is on top with margin >= margin[class] for
+    `persist` checkpoints in a row and at least min_frac of the wafer is tested. The first
+    call is kept.
+    """
 
     def __init__(self, cfg):
         self.cfg = cfg
