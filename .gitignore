@@ -1,5 +1,6 @@
 # build outputs (simulation, Vivado runs, regression vectors)
 build/
+/vivado/
 .Xil/
 xsim.dir/
 *.jou
