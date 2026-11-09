@@ -1,11 +1,11 @@
-"""RTL regression: run wafers through the Vivado simulator (xsim) and compare every field
-of every checkpoint record with the bit-exact Python model (model/wpe_model.py).
+"""RTL regression: runs the test wafers in xsim and compares every field of every
+checkpoint record with model/wpe_model.py.
 
-Usage:
-  python scripts/run_regression.py              # compile, run all tests with gap 0% and 35%
-  python scripts/run_regression.py --quick      # a few small tests, gap 0% only
-  python scripts/run_regression.py --netlist build/impl_100mhz/wpe_engine_funcsim.v --only a,b
-Results: build/regress/summary.txt (also printed).
+usage:
+  python scripts/run_regression.py              # all tests, input gaps 0% and 35%
+  python scripts/run_regression.py --quick      # 4 small tests
+  python scripts/run_regression.py --netlist build/impl/wpe_engine_funcsim.v --only a,b
+summary goes to build/regress/summary.txt
 """
 import argparse
 import json
@@ -28,14 +28,13 @@ from wpe_model import Engine                                         # noqa: E40
 from wpe_params import CK_KEYS, CLASSES, Config, read_ck, write_cfg, write_ck, write_stim  # noqa: E402
 
 VIVADO_BIN = Path(os.environ.get("VIVADO_BIN", r"C:\AMDDesignTools\2026.1\Vivado\bin"))
-RTL = ["rtl/wpe_pkg.sv", "rtl/wpe_zone.sv", "rtl/wpe_div.sv", "rtl/wpe_gbt.sv", "rtl/wpe_engine.sv",
-       "rtl/wpe_engine_top.sv", "tb/tb_wpe_engine.sv"]
+RTL = ["rtl/wpe_zone.v", "rtl/wpe_div.v", "rtl/wpe_gbt.v", "rtl/wpe_engine.v", "tb/tb_wpe_engine.v"]
 MEMS = ["rtl/wpe_nodes.mem", "rtl/wpe_leaves.mem"]
 BUILD = ROOT / "build"
 
 
 def trained_cfg(valid, **kw):
-    """Geometry from the map plus the calibrated decision registers (model/trained.json)."""
+    """geometry from the map plus the calibrated registers from model/trained.json"""
     t = json.loads((ROOT / "model" / "trained.json").read_text())
     cfg = geometry(valid, Config(chk=t["chk"], persist=t["persist"], min_frac=t["min_frac"],
                                  margin=list(t["margin"]), site_min=t["site_min"], site_delta=t["site_delta"]))
@@ -45,7 +44,7 @@ def trained_cfg(valid, **kw):
 
 
 def real_tests(quick):
-    """WM-811K wafers from the held-out test lots: one per class, plus special cases."""
+    """WM-811K wafers from the test lots: one per class plus a few special ones"""
     import dataset
     D = dataset.load()
     te = dataset.split(D)["test"]
@@ -121,12 +120,12 @@ def compile_sim(netlist=None):
     env = clean_env()
     if netlist is None:
         simdir = BUILD / "sim"
-        cmds = [tool_cmd("xvlog") + ["-sv"] + [str(ROOT / s) for s in RTL],
+        cmds = [tool_cmd("xvlog") + ["-i", str(ROOT / "rtl")] + [str(ROOT / s) for s in RTL],
                 tool_cmd("xelab") + ["-debug", "off", "-O2", "tb_wpe_engine", "-s", "tb_snap"]]
     else:
         simdir = BUILD / "sim_netlist"
         glbl = VIVADO_BIN.parent / "data" / "verilog" / "src" / "glbl.v"
-        cmds = [tool_cmd("xvlog") + ["-sv", str(ROOT / "rtl/wpe_pkg.sv"), str(ROOT / "tb/tb_wpe_engine.sv")],
+        cmds = [tool_cmd("xvlog") + ["-i", str(ROOT / "rtl"), str(ROOT / "tb/tb_wpe_engine.v")],
                 tool_cmd("xvlog") + [str(Path(netlist).resolve()), str(glbl)],
                 tool_cmd("xelab") + ["-debug", "off", "-O2", "-L", "unisims_ver", "-L", "secureip",
                                      "tb_wpe_engine", "glbl", "-s", "tb_snap"]]
