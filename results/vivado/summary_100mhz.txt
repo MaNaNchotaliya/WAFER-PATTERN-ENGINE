@@ -1,5 +1,5 @@
 part xc7a35tcpg236-1
 period_ns 10.0
-wns_ns 0.628
-whs_ns 0.144
-fmax_mhz 106.7
+wns_ns 0.709
+whs_ns 0.135
+fmax_mhz 107.6

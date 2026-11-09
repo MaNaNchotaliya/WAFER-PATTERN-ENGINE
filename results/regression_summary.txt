@@ -1,5 +1,5 @@
-xsim run with gap 0%: 91.3 s
-xsim run with gap 35%: 96.7 s
+xsim run with gap 0%: 95.3 s
+xsim run with gap 35%: 98.4 s
 test                         dies records      final       call   @die  site    gap0%   gap35%     clocks
 wm_none_163321                561      36   Edge-Loc          -      -     -     PASS     PASS     200889
 wm_center_27361               515      33     Center     Center    272     -     PASS     PASS     183774
