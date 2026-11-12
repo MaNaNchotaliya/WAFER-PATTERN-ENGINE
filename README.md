@@ -17,13 +17,11 @@ that were never used for training.
 
 | | |
 |---|---|
-| Early calls | right 88% of the time. Edge-Ring gets named after a median of 9% of the dies, Random and Near-full after 26%, Center after 47%. 1% of normal wafers get a wrong early call |
-| Full wafer | 86.3% balanced accuracy over the 9 classes |
-| Bad probe site | a site that fails half its good dies is caught on 99.6% of wafers, after 17% of the wafer. 0.12% false alarms with a good card |
-| FPGA | Artix-7 xc7a35t, meets 100 MHz (WNS +0.709 ns), 2,392 LUTs (11.5%), 2,308 FFs, 10.5 BRAM, 4 DSP |
-| Verification | RTL output matches the Python model on every field of 6,742 checkpoint records (25 tests, with and without random gaps on the input), and the post-route netlist matches on 11 of those tests |
-
-![wafers at the moment of the call](docs/figures/example_calls.png)
+| Early calls | an edge ring gets named after a median of only 9% of the dies, 88% of all early calls are right, and only 1% of normal wafers get a wrong one |
+| Bad probe site | a site that fails half its good dies is caught on 99.6% of wafers, after 17% of the wafer, with 0.12% false alarms on a good card |
+| FPGA | meets 100 MHz on an Artix-7 after place and route |
+| Verification | the RTL matches the Python model on every field of all 6,742 checkpoint records, and the routed netlist was checked the same way |
+| Try it | a Windows app runs the same model, no Vivado needed: [download the .exe](https://github.com/MaNaNchotaliya/WAFER_PATTERN_ENGINE/releases/latest) |
 
 ## Two parts
 
@@ -32,7 +30,18 @@ The project comes in two parts that run the same engine. Pick the one you need:
 | | what it is | start here |
 |---|---|---|
 | **Part 1: Vivado** | the FPGA design. Verilog, testbench, the script that makes the Vivado project, timing and utilization reports, and the regression that checks the RTL against the Python model | [vivado/](vivado/) |
-| **Part 2: Software** | a Windows desktop app. Type, paste or open a wafer map and it shows what the engine does with it, die by die, or tells you what's wrong with the input. One .exe, no Vivado or Python needed | [software/](software/) |
+| **Part 2: Software** | a Windows desktop app. Type, paste, open or draw a wafer map and it shows what the engine does with it, die by die, or tells you what's wrong with the input. One .exe, no Vivado or Python needed | [software/](software/), [download](https://github.com/MaNaNchotaliya/WAFER_PATTERN_ENGINE/releases/latest) |
+
+<table>
+<tr>
+<td width="50%"><img src="vivado/screenshots/simulation_early_call.png" alt="Vivado simulation: at 926.8 us ck_called goes high and the engine names the wafer Center"><br><sub><b>Vivado</b>: simulation of a real wafer. The engine names the Center pattern before the wafer is fully tested</sub></td>
+<td width="50%"><img src="vivado/screenshots/implemented_timing.png" alt="Vivado implemented design on the Artix-7 with the trees, divider and zone unit highlighted"><br><sub><b>Vivado</b>: placed and routed on the Artix-7, timing met at 100 MHz</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="software/screenshots/app_donut.png" alt="The Windows app with a partly tested wafer and the result Donut"><br><sub><b>Windows app</b>: a real wafer. The Donut pattern is named while the wafer is still being tested</sub></td>
+<td width="50%"><img src="software/screenshots/app_paint.png" alt="The Windows app with a ring of fails painted on a blank wafer and the result Edge-Ring"><br><sub><b>Windows app</b>: draw your own pattern with the mouse. A painted ring gets called Edge-Ring</sub></td>
+</tr>
+</table>
 
 Both use the Python model in `model/`. The RTL is checked against it record by record, and
 the app runs it, so the app makes the same calls the hardware would. The trees in it were
@@ -85,6 +94,8 @@ another wafer of the same lot) so I split by lot: 30% of the lots for test, 20% 
 rest for calibrating the call thresholds. WM-811K doesn't record the probe order, so the
 dies are fed in serpentine order (rows top to bottom, alternating direction).
 All tables: [results/eval_tables.md](results/eval_tables.md)
+
+![wafers at the moment of the call](docs/figures/example_calls.png)
 
 ### How early each pattern gets named
 

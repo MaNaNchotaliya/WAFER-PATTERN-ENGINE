@@ -50,6 +50,8 @@ Other things you can do:
 
 ![an error in the input](screenshots/app_error.png)
 
+![a ring painted with the mouse on a blank wafer, called Edge-Ring](screenshots/app_paint.png)
+
 ## Same answers as the hardware
 
 The app runs the Python model from `model/`, the same one the Verilog in `vivado/` is
