@@ -1,4 +1,4 @@
-"""Figures in docs/figures, from results/eval_results.json (run scripts/evaluate.py first)."""
+"""Figures in docs/figures, from results/eval_results.json (run training/evaluate.py first)."""
 import json
 import sys
 

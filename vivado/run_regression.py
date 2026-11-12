@@ -2,9 +2,9 @@
 checkpoint record with model/wpe_model.py.
 
 usage:
-  python scripts/run_regression.py              # all tests, input gaps 0% and 35%
-  python scripts/run_regression.py --quick      # 4 small tests
-  python scripts/run_regression.py --netlist build/impl/wpe_engine_funcsim.v --only a,b
+  python vivado/run_regression.py              # all tests, input gaps 0% and 35%
+  python vivado/run_regression.py --quick      # 4 small tests
+  python vivado/run_regression.py --netlist build/impl/wpe_engine_funcsim.v --only a,b
 summary goes to build/regress/summary.txt
 """
 import argparse
@@ -20,7 +20,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "model"))
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "training"))
 
 from wpe_gbt import Trees                                            # noqa: E402
 from wpe_geom import dies_from_map, geometry, inject_site_fault, multisite, serpentine  # noqa: E402
@@ -31,6 +31,7 @@ VIVADO_BIN = Path(os.environ.get("VIVADO_BIN", r"C:\AMDDesignTools\2026.1\Vivado
 RTL = ["rtl/wpe_zone.v", "rtl/wpe_div.v", "rtl/wpe_gbt.v", "rtl/wpe_engine.v", "tb/tb_wpe_engine.v"]
 MEMS = ["rtl/wpe_nodes.mem", "rtl/wpe_leaves.mem"]
 BUILD = ROOT / "build"
+HW = ROOT / "vivado"                                # rtl/, tb/, sim/ live here
 
 
 def trained_cfg(valid, **kw):
@@ -120,18 +121,18 @@ def compile_sim(netlist=None):
     env = clean_env()
     if netlist is None:
         simdir = BUILD / "sim"
-        cmds = [tool_cmd("xvlog") + ["-i", str(ROOT / "rtl")] + [str(ROOT / s) for s in RTL],
+        cmds = [tool_cmd("xvlog") + ["-i", str(HW / "rtl")] + [str(HW / s) for s in RTL],
                 tool_cmd("xelab") + ["-debug", "off", "-O2", "tb_wpe_engine", "-s", "tb_snap"]]
     else:
         simdir = BUILD / "sim_netlist"
         glbl = VIVADO_BIN.parent / "data" / "verilog" / "src" / "glbl.v"
-        cmds = [tool_cmd("xvlog") + ["-i", str(ROOT / "rtl"), str(ROOT / "tb/tb_wpe_engine.v")],
+        cmds = [tool_cmd("xvlog") + ["-i", str(HW / "rtl"), str(HW / "tb" / "tb_wpe_engine.v")],
                 tool_cmd("xvlog") + [str(Path(netlist).resolve()), str(glbl)],
                 tool_cmd("xelab") + ["-debug", "off", "-O2", "-L", "unisims_ver", "-L", "secureip",
                                      "tb_wpe_engine", "glbl", "-s", "tb_snap"]]
     simdir.mkdir(parents=True, exist_ok=True)
     for m in MEMS:                                   # $readmemh looks in the run directory
-        shutil.copy(ROOT / m, simdir)
+        shutil.copy(HW / m, simdir)
     for cmd in cmds:
         r = subprocess.run(cmd, cwd=simdir, env=env, capture_output=True, text=True)
         if r.returncode != 0:

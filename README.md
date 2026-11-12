@@ -25,25 +25,18 @@ that were never used for training.
 
 ![wafers at the moment of the call](docs/figures/example_calls.png)
 
-## In Vivado
+## Two parts
 
-The project comes from `scripts/create_project.tcl`. Synthesis and implementation run out
-of context on an Artix-7 xc7a35t at 100 MHz, and Run Simulation plays one real wafer from
-the test lots.
+The project comes in two parts that run the same engine. Pick the one you need:
 
-Implemented design. Tree ensemble in yellow, divider in green, zone unit in cyan:
+| | what it is | start here |
+|---|---|---|
+| **Part 1: Vivado** | the FPGA design. Verilog, testbench, the script that makes the Vivado project, timing and utilization reports, and the regression that checks the RTL against the Python model | [vivado/](vivado/) |
+| **Part 2: Software** | a Windows desktop app. Type, paste or open a wafer map and it shows what the engine does with it, die by die, or tells you what's wrong with the input. One .exe, no Vivado or Python needed | [software/](software/) |
 
-![implemented design and timing summary](docs/vivado/implemented_timing.png)
-
-Utilization per block. The divider is the biggest because all the feature operands get
-muxed into it:
-
-![utilization](docs/vivado/implemented_utilization.png)
-
-Behavioral simulation of a wafer with a Center pattern. At 926.8 us the engine calls it
-Center after 272 of its 515 dies (`ck_called` goes high):
-
-![simulation of the early call](docs/vivado/simulation_early_call.png)
+Both use the Python model in `model/`. The RTL is checked against it record by record, and
+the app runs it, so the app makes the same calls the hardware would. The trees in it were
+trained by the scripts in `training/`.
 
 ## How it works
 
@@ -134,44 +127,29 @@ Edge-Ring 95%, Donut 95%, Center 91%, none 89%, Edge-Loc 82%, Scratch 68%, Loc 6
 
 | folder | what's in it |
 |---|---|
-| `rtl/` | `wpe_engine.v` (top), `wpe_zone.v`, `wpe_div.v`, `wpe_gbt.v`, `wpe_defs.vh` (constants, record layout), tree ROMs `wpe_nodes.mem` / `wpe_leaves.mem` |
-| `tb/` | `tb_wpe_engine.v`, file driven testbench |
-| `constraints/` | 100 MHz clock |
-| `sim/` | one WM-811K wafer for the default Vivado simulation, with the expected records |
-| `scripts/` | Vivado project script, regression runner, data download, training, evaluation, plots |
+| `vivado/` | Part 1. `rtl/`, `tb/`, `constraints/`, `sim/`, `create_project.tcl`, `run_regression.py`, Vivado reports and regression summaries in `results/`, `screenshots/` |
+| `software/` | Part 2. The desktop app, its 11 sample wafers, `check_app.py` and the exe build |
 | `model/` | Python reference model (per die), fast vectorized version, trained trees |
-| `results/` | regression and netlist summaries, evaluation tables, Vivado reports |
-| `docs/` | exact rules, figures, Vivado screenshots |
+| `training/` | WM-811K download, split by lot, training, evaluation, figures, the app's sample wafers |
+| `results/` | evaluation tables |
+| `docs/` | exact rules, figures |
 
-## Running it
+## Training and evaluation
 
-Needs Vivado (2026.1 here, the free license covers Artix-7) and Python 3 with numpy,
-scikit-learn and matplotlib. If Vivado isn't in `C:\AMDDesignTools\2026.1\Vivado\bin`, set
-`VIVADO_BIN`.
+Only needed if you want to redo the numbers above, the trained trees are already in
+`model/`. Needs Python 3 with numpy, scikit-learn and matplotlib.
 
 ```bash
-# Vivado project (opens the GUI). Run Simulation plays one Center wafer and prints the call
-vivado -source scripts/create_project.tcl
-
-# same thing in batch: synthesis + implementation, reports and routed netlist in build/impl
-vivado -mode batch -source scripts/create_project.tcl -tclargs build
-
-# WM-811K (157 MB from Kaggle), needed for the regression and the evaluation
-python scripts/get_data.py
-
-# RTL vs Python model, 25 tests, input gaps 0% and 35%
-python scripts/run_regression.py
-
-# same testbench on the routed netlist (slow, pick a few tests)
-python scripts/run_regression.py --netlist build/impl/wpe_engine_funcsim.v --only wm_center_27361,single_die,rejects
+# WM-811K (157 MB from Kaggle)
+python training/get_data.py
 
 # the two Python models against each other on random cases
 python model/selftest_models.py 400 --trained
 
-# evaluation + plots, and retraining if you want (the trained trees are in the repo)
-python scripts/evaluate.py
-python scripts/make_figures.py
-python scripts/train.py
+# evaluation + plots, and retraining if you want
+python training/evaluate.py
+python training/make_figures.py
+python training/train.py
 ```
 
 ## Limitations
@@ -211,8 +189,9 @@ and measures how early it can do it, but that doesn't mean there isn't one.
 
 WM-811K: M.-J. Wu, J.-S. R. Jang and J.-L. Chen, "Wafer Map Failure Pattern Recognition and
 Similarity Ranking for Large-Scale Data Sets", IEEE Trans. Semiconductor Manufacturing
-28(1), 2015 (MIR Lab, National Taiwan University). `scripts/get_data.py` downloads it from
-[Kaggle](https://www.kaggle.com/datasets/qingyi/wm811k-wafer-map), it's not in this repo.
+28(1), 2015 (MIR Lab, National Taiwan University). `training/get_data.py` downloads it from
+[Kaggle](https://www.kaggle.com/datasets/qingyi/wm811k-wafer-map), it's not in this repo
+apart from the 11 sample wafers in `software/samples` and the one in `vivado/sim`.
 
 ## License
 

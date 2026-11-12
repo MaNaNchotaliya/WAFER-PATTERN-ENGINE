@@ -3,7 +3,7 @@
 //   node rom: 7 words per tree {feature[5:0], threshold[13:0]}, heap order
 //   leaf rom: 8 leaves per tree, then the 9 start values (16 bit, Q.8)
 // tree t adds to class t%9, go right when feature > threshold, 2 clocks per level.
-// the .mem files come from scripts/train.py. Features are read from the engine
+// the .mem files come from training/train.py. Features are read from the engine
 // through fidx / fval.
 module wpe_gbt (clk, rst, start, busy, done, fidx, fval, score_flat);
 `include "wpe_defs.vh"

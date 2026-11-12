@@ -19,7 +19,7 @@ TRAIN_FRACS = [round(0.05 * k, 2) for k in range(1, 21)]      # 5%, 10%, ..., 10
 
 def load():
     if not DATA.exists():
-        raise SystemExit("data/wm811k_labeled.npz missing: run python scripts/get_data.py first")
+        raise SystemExit("data/wm811k_labeled.npz missing: run python training/get_data.py first")
     d = np.load(DATA)
     return {k: d[k] for k in d.files}
 

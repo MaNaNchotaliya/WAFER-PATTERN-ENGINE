@@ -7,7 +7,7 @@
 // Every chk dies (and after the last die) there is a checkpoint: 39 features through
 // one divider -> 576 trees -> early call rule -> probe site check, and one record goes
 // out on ck_flat (layout in wpe_defs.vh).
-// Reference model is model/wpe_model.py, scripts/run_regression.py checks against it.
+// Reference model is model/wpe_model.py, vivado/run_regression.py checks against it.
 module wpe_engine (clk, rst, cfg_we, cfg_addr, cfg_wdata, start,
                    s_valid, s_ready, s_x, s_y, s_fail, s_site, s_last,
                    busy, done, ck_valid, ck_flat);

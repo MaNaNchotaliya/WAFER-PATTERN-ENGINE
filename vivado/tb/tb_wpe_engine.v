@@ -5,7 +5,7 @@
 //   out  - one line per checkpoint record, same field order as CK_KEYS in model/wpe_params.py
 // plusargs: +LIST:<file>  +GAP:<0..99, % of clocks with s_valid low>  +SEED:<n>
 // (':' not '=', the xsim .bat wrapper splits arguments on '=')
-// Runs go back to back without a reset in between. scripts/run_regression.py writes the
+// Runs go back to back without a reset in between. run_regression.py writes the
 // files and compares the outputs with the python model.
 `timescale 1ns/1ps
 

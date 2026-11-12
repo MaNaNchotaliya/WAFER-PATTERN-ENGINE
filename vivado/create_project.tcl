@@ -1,23 +1,25 @@
 # create_project.tcl
-# Makes the Vivado project (vivado/wafer_pattern_engine.xpr) from rtl/, tb/, constraints/, sim/.
+# Makes the Vivado project (vivado/project/wafer_pattern_engine.xpr) from rtl/, tb/,
+# constraints/ and sim/ next to this script.
 #
-#   GUI:    vivado -source scripts/create_project.tcl
-#   batch:  vivado -mode batch -source scripts/create_project.tcl -tclargs build
+#   GUI:    vivado -source vivado/create_project.tcl
+#   batch:  vivado -mode batch -source vivado/create_project.tcl -tclargs build
 #           (batch also runs synthesis + implementation and writes the reports and the
 #            routed netlist to build/impl)
 #
 # The engine is built out of context (no I/O pins, every reg-to-reg path timed at
 # 100 MHz) since it is a block that would sit inside a tester FPGA, it has no board top.
 
-set root [file normalize [file join [file dirname [info script]] ..]]
-set proj [file join $root vivado]
+set here [file normalize [file dirname [info script]]]
+set root [file normalize [file join $here ..]]
+set proj [file join $here project]
 
 create_project wafer_pattern_engine $proj -part xc7a35tcpg236-1 -force
 set_property target_language Verilog [current_project]
 set_property simulator_language Verilog [current_project]
 
 # design sources
-set rtl [file join $root rtl]
+set rtl [file join $here rtl]
 add_files -norecurse [list $rtl/wpe_defs.vh $rtl/wpe_zone.v $rtl/wpe_div.v $rtl/wpe_gbt.v \
                            $rtl/wpe_engine.v $rtl/wpe_nodes.mem $rtl/wpe_leaves.mem]
 set_property file_type {Verilog Header} [get_files wpe_defs.vh]
@@ -25,18 +27,18 @@ set_property include_dirs $rtl [get_filesets sources_1]
 set_property top wpe_engine [get_filesets sources_1]
 
 # 100 MHz clock
-add_files -fileset constrs_1 -norecurse [file join $root constraints wpe_clock.xdc]
+add_files -fileset constrs_1 -norecurse [file join $here constraints wpe_clock.xdc]
 set_property USED_IN {synthesis implementation out_of_context} [get_files wpe_clock.xdc]
 set_property -name {STEPS.SYNTH_DESIGN.ARGS.MORE OPTIONS} -value {-mode out_of_context} -objects [get_runs synth_1]
 
 # testbench. The default run is one WM-811K wafer with a Center pattern (sim/demo_center.*),
-# the full regression is scripts/run_regression.py
-add_files -fileset sim_1 -norecurse [file join $root tb tb_wpe_engine.v]
+# the full regression is run_regression.py
+add_files -fileset sim_1 -norecurse [file join $here tb tb_wpe_engine.v]
 set_property include_dirs $rtl [get_filesets sim_1]
 set_property top tb_wpe_engine [get_filesets sim_1]
 set lst [file join $proj demo_list.txt]
 set fh [open $lst w]
-puts $fh "$root/sim/demo_center.cfg $root/sim/demo_center.die $proj/demo_center.out"
+puts $fh "$here/sim/demo_center.cfg $here/sim/demo_center.die $proj/demo_center.out"
 close $fh
 set_property -name {xsim.simulate.runtime} -value {all} -objects [get_filesets sim_1]
 set_property -name {xsim.simulate.xsim.more_options} -value "-testplusarg LIST:$lst" -objects [get_filesets sim_1]

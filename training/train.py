@@ -1,7 +1,7 @@
 """Trains the tree ensemble, writes the ROM files, then calibrates the early call margins
 and the site check on the calibration lots.
 
-usage: python scripts/train.py
+usage: python training/train.py
 writes model/trees.npz, rtl/wpe_nodes.mem, rtl/wpe_leaves.mem, model/trained.json
 """
 import json
@@ -115,7 +115,7 @@ def main():
     print(f"tree ensemble fitted in {time.time() - t:.0f} s")
     trees = from_sklearn(clf)
     trees.save(ROOT / "model" / "trees.npz")
-    trees.write_mem(ROOT / "rtl" / "wpe_nodes.mem", ROOT / "rtl" / "wpe_leaves.mem")
+    trees.write_mem(ROOT / "vivado" / "rtl" / "wpe_nodes.mem", ROOT / "vivado" / "rtl" / "wpe_leaves.mem")
     # quantization check: integer argmax vs floating-point argmax on the full maps
     full = Xf[:, -1, :]
     agree = np.mean(np.argmax(clf._raw_predict(full.astype(np.float64)), 1)

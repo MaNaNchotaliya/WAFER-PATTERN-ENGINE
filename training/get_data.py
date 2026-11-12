@@ -4,7 +4,7 @@ LSWMD.pkl is a pandas DataFrame pickled with python 2. pickle.load runs whatever
 asks for, so this uses a restricted unpickler that only builds numpy arrays and dummy
 objects and stops on anything else. Doesn't need pandas.
 
-usage: python scripts/get_data.py [--cache DIR]   (DIR = where the 157 MB zip goes)
+usage: python training/get_data.py [--cache DIR]   (DIR = where the 157 MB zip goes)
 """
 import argparse
 import hashlib

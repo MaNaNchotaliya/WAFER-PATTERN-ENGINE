@@ -92,7 +92,7 @@ fails are independent and is higher for clusters. `aniso` is high for lines (scr
 ## 5. Tree ensemble
 
 576 trees (64 rounds x 9 classes) of depth 3, trained with scikit-learn's
-`HistGradientBoostingClassifier` (`scripts/train.py`) and quantized: thresholds are floored
+`HistGradientBoostingClassifier` (`training/train.py`) and quantized: thresholds are floored
 to integers (the features are integers, so `x <= t` and `x <= floor(t)` agree), leaf values
 and class start values are rounded to Q.8. Shallower trees are padded to depth 3 by copying
 a leaf into every slot below it.
@@ -128,7 +128,7 @@ and the first site with `d >= site_delta` is latched (site, number of dies teste
 
 `ndies` (= T), `n_dup`, `n_oor`, `final`, the 39 features, the 9 scores, `top`, `margin`,
 `run_cls`, `run_len`, `called`, `call_cls`, `call_ndies`, `site_flag`, `site_id`,
-`site_ndies`. They come out packed on `ck_flat` (bit offsets in `rtl/wpe_defs.vh`). The
+`site_ndies`. They come out packed on `ck_flat` (bit offsets in `vivado/rtl/wpe_defs.vh`). The
 testbench writes every record to a file and the regression compares every field.
 
 ## 9. Clock cycles

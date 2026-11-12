@@ -7,7 +7,7 @@
   E5  probe site faults
   E6  same recipe on the official WM-811K split, for reference
 
-usage: python scripts/evaluate.py   -> results/eval_results.json, results/eval_tables.md
+usage: python training/evaluate.py   -> results/eval_results.json, results/eval_tables.md
 """
 import json
 import sys

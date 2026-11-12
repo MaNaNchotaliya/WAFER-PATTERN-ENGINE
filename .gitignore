@@ -1,6 +1,6 @@
 # build outputs (simulation, Vivado runs, regression vectors)
 build/
-/vivado/
+/vivado/project/
 .Xil/
 xsim.dir/
 *.jou
@@ -8,7 +8,7 @@ xsim.dir/
 *.pb
 *.wdb
 
-# downloaded and converted wafer-map data (see scripts/get_data.py to fetch it)
+# downloaded and converted wafer-map data (see training/get_data.py to fetch it)
 data/
 
 # Python
